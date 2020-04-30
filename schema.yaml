@@ -1,0 +1,594 @@
+  title: Oracle E Business Suite
+  description: Oracle E Business Suite on Oracle Cloud Infrastructure
+  schemaVersion: 1.1.0
+  version: "20190304"
+  locale: "en"
+
+  # URL of Logo Icon used on Application Information tab. Logo must be 130x130 pixels.
+  # (Optional)
+  #logoUrl: https://cloudmarketplace.oracle.com/marketplace/content?contentId=63497741
+
+  # Used in Application Information tab to Hyperlink Title and Logo to the Marketplace listing.
+  # Also used to link to Listing Usage section for "View Instructions".
+  # (Optional) If it is missing, Application Information uses the
+  # "marketplace-listing-id" tag for the same purpose.
+  #source:
+  #  type: marketplace
+  #  reference: 63497640
+
+  groupings:
+  - title: "Availability Domain(s)"
+    variables:
+#    - ${singlead}
+#    - ${multiad}
+#    - ${availability_domain}
+#    - ${availability_domain2}
+    - ${AD}
+
+  - title: "Network Configuration"
+    variables:
+    - ${vcn_compartment_ocid}
+    - ${vcn_cidr}
+    - ${vcn_dns_label}
+
+
+  - title: "SSH Keys and Timezone"
+    variables:
+    - ${bastion_ssh_public_key}
+    - ${bastion_ssh_private_key}
+    - ${ssh_public_key}
+    - ${ssh_private_key}
+    - ${timezone}
+
+  - title: "Application Configuration"
+    variables:
+    - ${compartment_ocid}
+    - ${ebs_env_prefix}
+    - ${ebs_app_instance_count}
+#    - ${ebs_app_os_image_id}
+    - ${linux_os_version}
+    - ${ebs_app_instance_shape}
+    - ${ebs_app_boot_volume_size_in_gb}
+    - ${ebs_app_block_volume_size_in_gb}
+    - ${ebs_app_block_volume_mount_path}
+    - ${ebs_app_block_volume_vpus_per_gb}
+    - ${ebs_shared_filesystem}
+    - ${ebs_shared_filesystem_mount_path}
+    - ${ebs_shared_filesystem_size_limit_in_gb}
+    - ${ebs_app_instance_listen_port}
+
+  - title: "Database Configuration"
+    variables:
+    - ${ebs_database_required}
+ #   - ${ebs_database_option}
+    - ${db_name}
+    - ${db_pdb_name}
+    - ${db_admin_password}
+    - ${db_version}
+    - ${db_edition}
+    - ${db_license_model}
+    - ${db_node_count}
+    - ${db_instance_shape}
+    - ${db_size_in_gb}
+    - ${db_characterset}
+    - ${db_nls_characterset}
+
+  - title: "Load Balancer Configuration"
+    variables:
+    - ${load_balancer_private}
+    - ${load_balancer_hostname}
+    - ${load_balancer_shape}
+    - ${load_balancer_listen_port}
+
+  variables:
+    # Hidden variables
+    tenancy_ocid:
+      title: Tenancy ID
+      description: The Oracle Cloud Identifier (OCID) for your tenancy
+      type: string
+      required: true
+      visible: false
+
+    region:
+      title: Region
+      description: The region in which to create all resources
+      type: oci:identity:region:name
+      required: true
+      visible: false
+
+    user_ocid:
+      title: User ID
+      description: The Oracle Cloud Identifier (OCID) for the user
+      type: string
+      visible: false
+
+    fingerprint:
+      title: Private Key Fingerprint
+      type: string
+      visible: false
+
+    private_key_path:
+      title: Private Key Path
+      type: string
+      visible: false
+
+#    singlead:
+#      title: High Availability - Single Availability Domain
+#      description: Multi AD
+#      type: boolean
+#      default: false
+#      visible:
+#        not:
+#        - ${multiad}
+
+#    availability_domain:
+#      type: oci:identity:availabilitydomain:name 
+#      title: "Availability Domain1"
+#      description: "Availability Domain"
+#      dependsOn:
+#      compartmentId: ${compartment_ocid}
+#      visible: 
+#        or:
+#        - ${multiad}
+#        - ${singlead}
+#      required: true
+
+#    availability_domain2:
+#      type: oci:identity:availabilitydomain:name 
+#      title: "Availability Domain2"
+#      description: "Availability Domain"
+#      dependsOn:
+#        compartmentId: ${compartment_ocid}
+#      visible: ${multiad}
+#      required: true
+
+#    multiad:
+#      title: High Availability - Multi Availability Domain
+#      description: Multi AD
+#      type: boolean
+#      default: false
+#      visible:
+#        not:
+#        - ${singlead}
+
+    AD:
+      title: Availability Domain(s)
+      description: Availability Domain for Oracle EBS Deployment.Availability Domain for Oracle EPM Deployment. This variable drives the Oracle EPM architecture to be deployed. Setting AD = ["1"] deploys infrastructure in single availability domain (Availabilty domain 1 of the tenancy) and AD = ["1","2"] deploys infrastructure in multiple ADs (Availability domains 1 and 2 of the tenancy).
+      type: array
+      visible: true
+      required: true
+
+    vcn_compartment_ocid:
+      title: Virtual Cloud Network Compartment
+      description: The target compartment to create network.
+      type: oci:identity:compartment:id
+      required: true
+      visible: true
+      
+    vcn_cidr:
+      title: Virtual Cloud Network CIDR
+      visible: true
+      type: enum
+      enum:
+      - 172.16.0.0/16
+      - 10.0.0.0/16
+      - 192.168.0.0/16
+      default: 172.16.0.0/16
+      required: true
+      
+    vcn_dns_label:
+      title: Virtual Cloud Network DNS Label
+      type: string
+      required: true
+      default: ebsvcn
+      visible: true
+
+    timezone:
+      type: string
+      title: Timezone of Compute and Database System(s)
+      description: The timezone of compute and database system nodes
+      visible: true
+      required: true
+
+
+    # General Configuration
+    ebs_env_prefix:
+      title: Resource Display Name Prefix
+      description: Display name prefix for all generated compute, network and database resources.
+      type: string
+      maxLength: 3
+      pattern: "^([a-zA-Z_][a-zA-Z0-9\\-_]*)?$"
+      default: "ebs"
+      required: true
+
+    compartment_ocid:
+      title: Target Compartment
+      description: The target compartment in which all provisioned resources will be created.
+      type: oci:identity:compartment:id
+      required: true
+
+    ebs_app_instance_count:
+      title: Number of application Node(s)
+      description: Minimum required is 1
+      type: integer
+      minimum: 1
+      maximum: 4
+      default: 1
+      required: true
+      visible: true
+
+#    ebs_app_os_image_id:
+#      title: OCID of OS Image
+#      description: Check https://docs.cloud.oracle.com/en-us/iaas/images/    
+#      type: oci:core:image:id
+#      pattern: "^ocid1\\.image\\.[a-zA-Z0-9\\.\\-\\_]+$"
+#      dependsOn:
+#        compartmentId: ${compartment_ocid}
+#      required: true
+
+    ebs_app_instance_shape:
+      title: Application Instance Shape
+      description: The shape for the Application instance.
+      type: oci:core:instanceshape:name
+      visible: true
+      default: "VM.Standard2.1"
+      required: true
+      dependsOn:
+        compartmentId: ${compartment_ocid}
+#        imageId: ${ebs_app_os_image_id}
+
+    ebs_app_boot_volume_size_in_gb:
+      type: integer
+      title: Boot Volume size (in GB)
+      description: The size of the boot volume. Minimum required is 50 GB
+      minimum: 50
+      maximum: 32768
+      multipleof: 1
+      visible: true
+      default: 100
+      required: true
+
+    ebs_app_block_volume_size_in_gb:
+      type: integer
+      title: Block Volume size (in GB)
+      description: The size of the block volume. Minimum required is 50 GB
+      minimum: 50
+      maximum: 32768
+      multipleof: 1
+      visible: true
+      default: 100
+      required: true
+      
+    ebs_app_block_volume_vpus_per_gb:
+      title: Block Volume Performance
+      description: 0 is Lower Cost, 10 is Balanced and 20 is Higher Performance option
+      visible: true
+      type: enum
+      enum:
+      - 0
+      - 10
+      - 20
+      default: 0
+      required: true
+
+    ebs_app_block_volume_mount_path:
+      title: Block Volume Filesystem mount path
+      description: EBS Block Volume Filesystem mount path
+      type: string
+      default: /u01/install/APPS
+      visible: true
+      required: true
+
+    ebs_app_instance_listen_port:
+      title: Listen port for App Instance
+      description: Listen port for App Instance
+      type: string
+      default: 8000
+      visible: true
+      required: true
+
+#    ebs_shared_filesystem:
+#      title: Create Shared Filesystem
+#      description: Create Shared Filesystem using FSS for application binaries
+#      type: boolean
+#      default: false
+#      visible: true
+
+    ebs_shared_filesystem_mount_path:
+      title: Shared Filesystem path
+      description: EBS Shared Filesystem path
+      type: string
+      default: /u01/install/APPS/shared
+      visible: true
+
+    ebs_shared_filesystem_size_limit_in_gb:
+      title: Shared Filesystem Size Limit
+      description: EBS Shared Filesystem Size Limit in GB
+      type: string
+      default: 500
+      visible: false
+
+    ebs_database_required:
+      title: Create EBS database
+      description: Create EBS database system
+      type: boolean
+      default: false
+      visible: true
+
+#    ebs_database_option:
+#      title: Create database on
+#      visible: true
+#      type: enum
+#      enum:
+#      - virtualmachine
+#      default: VM
+#      required: true
+
+    db_edition:
+      title: Database Edition
+      visible: ${ebs_database_required}
+      type: enum
+      enum:
+      - ENTERPRISE_EDITION
+      - ENTERPRISE_EDITION_HIGH_PERFORMANCE
+      - ENTERPRISE_EDITION_EXTREME_PERFORMANCE
+      default: ENTERPRISE_EDITION_EXTREME_PERFORMANCE
+      required: true
+
+    db_license_model:
+      title: Database License
+      visible: ${ebs_database_required}
+      type: enum
+      enum:
+      - LICENSE_INCLUDED
+      - BRING_YOUR_OWN_LICENSE
+      default: LICENSE_INCLUDED
+      required: true
+
+    db_version:
+      title: Database Version
+      visible: ${ebs_database_required}
+      type: enum
+      enum:
+      - 12.1.0.2
+      - 11.2.0.4
+      default: 12.1.0.2
+      required: true
+
+    db_node_count:
+      title: Number of Database Nodes
+      description: Select 2 for High Availability
+      visible: ${ebs_database_required}
+      type: enum
+      enum:
+      - 1
+      - 2
+      default: 2
+      required: true
+
+    db_instance_shape:
+      title: Database Instance Shape
+      description: The shape for the DB instance.
+      type: oci:core:instanceshape:name
+      visible: ${ebs_database_required}
+      default: VM.Standard2.2
+      required: true
+      dependsOn:
+        compartmentId: ${compartment_ocid}
+
+    db_name:
+      title: Database Container Name
+      description: The name of the CDB.
+      type: string
+      pattern: "^([a-zA-Z0-9][a-zA-Z0-9_]*)?$"
+      visible: ${ebs_database_required}
+      default: EBSCDB
+      required: true
+
+    db_size_in_gb:
+      title: Database Size in GB
+      description: Database size in GB
+      visible: ${ebs_database_required}
+      type: enum
+      enum:
+      - 256
+      - 512
+      - 1024
+      - 2048
+      - 4096
+      - 8192
+      - 10240
+      - 12288
+      - 14336
+      - 16384
+      - 18432
+      - 20480
+      - 22528
+      - 24576
+      - 26624
+      - 28672
+      - 30720
+      - 32768
+      - 34816
+      - 36864
+      - 38912
+      - 40960
+      default: 256
+      required: true
+
+    db_admin_password:
+      description: Database Admin User Password
+      type: password
+      required: true
+      visible: ${ebs_database_required}
+
+    db_characterset:
+      type: string
+      visible: ${ebs_database_required}
+      default: AL32UTF8
+      required: true
+
+    db_nls_characterset:
+      type: string
+      visible: ${ebs_database_required}
+      default: AL16UTF16
+      required: true
+
+    db_pdb_name:
+      title: Database PDB Name
+      description: The name of the PDB.
+      type: string
+      pattern: "^([a-zA-Z0-9][a-zA-Z0-9_]*)?$"
+      visible: ${ebs_database_required}
+      default: EBSDB
+      required: true
+
+    load_balancer_private:
+      title: Private Load Balancer
+      description: Create a private load balancer for internal application endpoints
+      type: boolean
+      default: false
+      visible: true
+
+    load_balancer_hostname:
+      title: Load Balancer Hostname
+      description: Hostname of Load Balancer
+      type: string
+      default: ebs.mycompany.com
+      visible: true
+      required: true
+
+    load_balancer_shape:
+      title: Load Balancer Shape
+      description: Select load balancer shape.
+      type: enum
+      enum:
+      - 100Mbps
+      - 400Mbps
+      - 8000Mbps
+      default: 100Mbps
+      visible: true
+      required: true
+
+    load_balancer_listen_port:
+      title: Load Balancer Listen port
+      description: The listener port for load balanacer
+      type: array
+      default: 80
+      visible: true
+      required: true
+      
+    db_backup_recovery_window:
+      title: DB Backup Recovery Window in Days
+      visible: false
+      type: enum
+      enum:
+      - 7
+      - 15
+      - 30
+      - 45
+      - 60
+      default: 30
+      required: false
+
+    bastion_instance_shape:
+      title: Bastion instance shape
+      type: string
+      visible: false
+      default: "VM.Standard2.1"
+
+    ssh_public_key:
+      title: Public Key for Compute and Database System(s)
+      description: Public SSH key to be included in the ~/.ssh/authorized_keys file for the default user on the instance
+      type: text
+      visible: true
+      required: true
+
+    ssh_private_key:
+      title: Private Key for Compute and Database System(s)
+      description: Private SSH key required to perform EBS pre-requisites on created infrastructure.
+      type: text
+      visible: true
+      required: true
+
+    bastion_ssh_public_key:
+      title: SSH public key for Bastion Host
+      description: The deployment creates application and database instances in private subnets. To access these instances, a bastion host is created using VMStandard2.1 shape.
+      type: text
+      visible: true
+      required: true
+
+    bastion_ssh_private_key:
+      title: SSH private key for Bastion Host
+      description: The deployment creates application and database instances in private subnets. To access these instances, a bastion host is created using VMStandard2.1 shape.
+      type: text
+      visible: true
+      required: true
+
+    bastion_user:
+      title: Bastion user
+      description: bastion user
+      type: string
+      default: opc
+      visible: false
+
+    compute_instance_user:
+      title: Compute Instance user
+      description: The deployment creates application and database instances in private subnets. To access these instances, a bastion host is created using VMStandard2.1 shape. Bastion host VM can be deleted if infrastructure needs to accessed from on-premise using VPN/Fastconnect
+      type: string
+      default: opc
+      visible: false
+
+    InstanceOS:
+      title: Instance os
+      description: Operating system of bastion host
+      type: string
+      visible: false
+
+#    image_id:
+#      title: Image id
+#      description: OS images
+#      type: string
+#      visible: false
+
+    linux_os_version:
+      title: Oracle Linux version
+      description: Operating system version for compute instances
+      visible: true
+      type: enum
+      enum:
+      - "6.10"
+      - "7.7"
+      default: "7.7"
+      required: true
+
+    database_autobackup_enabled:
+      type: string
+      visible: false
+
+    database_autobackup_recovery_window:
+      type: string
+      visible: false
+
+    timeout:
+      type: string
+      visible: false
+
+    image_id:
+      type: map
+      visible: false
+
+  outputs:
+    BastionPublicIPs:
+      title: Bastion Public IP
+      type: string
+
+    ApplicationPrivateIPs:
+      title: Application Server Details
+      type: string
+
+    FSSDetails:
+      title: FSS Details
+      type: string
+  
+  primaryOutputButton: ${BastionPublicIPs}
