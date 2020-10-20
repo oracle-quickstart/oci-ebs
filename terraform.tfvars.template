@@ -20,6 +20,9 @@ timezone = "<timezone>"
 #Environment prefix to define name of resources
 ebs_env_prefix = "<Environment prefix>"
 
+# Freeform tags
+freeform_tags = <freeform_tags>
+
 # Number of application instances to be created
 ebs_app_instance_count = "<Number of application nodes>"
 

@@ -19,10 +19,6 @@
   groupings:
   - title: "Availability Domain(s)"
     variables:
-#    - ${singlead}
-#    - ${multiad}
-#    - ${availability_domain}
-#    - ${availability_domain2}
     - ${AD}
 
   - title: "Network Configuration"
@@ -31,13 +27,10 @@
     - ${vcn_cidr}
     - ${vcn_dns_label}
 
-
-  - title: "SSH Keys and Timezone"
+  - title: "SSH Keys and Server Timezone"
     variables:
     - ${bastion_ssh_public_key}
-    - ${bastion_ssh_private_key}
     - ${ssh_public_key}
-    - ${ssh_private_key}
     - ${timezone}
 
   - title: "Application Configuration"
@@ -45,7 +38,6 @@
     - ${compartment_ocid}
     - ${ebs_env_prefix}
     - ${ebs_app_instance_count}
-#    - ${ebs_app_os_image_id}
     - ${linux_os_version}
     - ${ebs_app_instance_shape}
     - ${ebs_app_boot_volume_size_in_gb}
@@ -60,7 +52,6 @@
   - title: "Database Configuration"
     variables:
     - ${ebs_database_required}
- #   - ${ebs_database_option}
     - ${db_name}
     - ${db_pdb_name}
     - ${db_admin_password}
@@ -79,6 +70,10 @@
     - ${load_balancer_hostname}
     - ${load_balancer_shape}
     - ${load_balancer_listen_port}
+
+  - title: "Tags"
+    variables:
+    - ${freeform_tags}
 
   variables:
     # Hidden variables
@@ -112,48 +107,9 @@
       type: string
       visible: false
 
-#    singlead:
-#      title: High Availability - Single Availability Domain
-#      description: Multi AD
-#      type: boolean
-#      default: false
-#      visible:
-#        not:
-#        - ${multiad}
-
-#    availability_domain:
-#      type: oci:identity:availabilitydomain:name 
-#      title: "Availability Domain1"
-#      description: "Availability Domain"
-#      dependsOn:
-#      compartmentId: ${compartment_ocid}
-#      visible: 
-#        or:
-#        - ${multiad}
-#        - ${singlead}
-#      required: true
-
-#    availability_domain2:
-#      type: oci:identity:availabilitydomain:name 
-#      title: "Availability Domain2"
-#      description: "Availability Domain"
-#      dependsOn:
-#        compartmentId: ${compartment_ocid}
-#      visible: ${multiad}
-#      required: true
-
-#    multiad:
-#      title: High Availability - Multi Availability Domain
-#      description: Multi AD
-#      type: boolean
-#      default: false
-#      visible:
-#        not:
-#        - ${singlead}
-
     AD:
       title: Availability Domain(s)
-      description: Availability Domain for Oracle EBS Deployment.Availability Domain for Oracle EPM Deployment. This variable drives the Oracle EPM architecture to be deployed. Setting AD = ["1"] deploys infrastructure in single availability domain (Availabilty domain 1 of the tenancy) and AD = ["1","2"] deploys infrastructure in multiple ADs (Availability domains 1 and 2 of the tenancy).
+      description: Availability Domain for Oracle EBS Infrastructure Provisioning.Setting AD = ["1"] provisions infrastructure in single availability domain (Availabilty domain 1 of the tenancy) and setting AD = ["1","2"] provisions infrastructure in multiple availability domains (Availability domains 1 and 2 of the tenancy).
       type: array
       visible: true
       required: true
@@ -190,20 +146,19 @@
       visible: true
       required: true
 
-
     # General Configuration
     ebs_env_prefix:
       title: Resource Display Name Prefix
-      description: Display name prefix for all generated compute, network and database resources.
+      description: Prefix to generate hostname for compute, network and database resources.
       type: string
       maxLength: 3
-      pattern: "^([a-zA-Z_][a-zA-Z0-9\\-_]*)?$"
+      pattern: "^([a-z][a-z0-9]{0,2})$"
       default: "ebs"
       required: true
 
     compartment_ocid:
       title: Target Compartment
-      description: The target compartment in which all provisioned resources will be created.
+      description: The target compartment to provision application compute instances.
       type: oci:identity:compartment:id
       required: true
 
@@ -217,25 +172,20 @@
       required: true
       visible: true
 
-#    ebs_app_os_image_id:
-#      title: OCID of OS Image
-#      description: Check https://docs.cloud.oracle.com/en-us/iaas/images/    
-#      type: oci:core:image:id
-#      pattern: "^ocid1\\.image\\.[a-zA-Z0-9\\.\\-\\_]+$"
-#      dependsOn:
-#        compartmentId: ${compartment_ocid}
-#      required: true
-
     ebs_app_instance_shape:
       title: Application Instance Shape
-      description: The shape for the Application instance.
-      type: oci:core:instanceshape:name
+      description: The shape for the Application compute instance.
+      type: enum
       visible: true
       default: "VM.Standard2.1"
+      enum:
+        - "VM.Standard2.1"
+        - "VM.Standard2.2"
+        - "VM.Standard2.4"
+        - "VM.Standard2.8"
+        - "VM.Standard2.16"
+        - "VM.Standard2.24"
       required: true
-      dependsOn:
-        compartmentId: ${compartment_ocid}
-#        imageId: ${ebs_app_os_image_id}
 
     ebs_app_boot_volume_size_in_gb:
       type: integer
@@ -275,30 +225,25 @@
       title: Block Volume Filesystem mount path
       description: EBS Block Volume Filesystem mount path
       type: string
-      default: /u01/install/APPS
+      default: /u02
       visible: true
       required: true
 
     ebs_app_instance_listen_port:
-      title: Listen port for App Instance
-      description: Listen port for App Instance
+      title: Listen port for application Instance
+      description: Listen port for application Instance
       type: string
+      maxLength: 4
+      pattern: "^([0-9][0-9]{0,3})$"
       default: 8000
       visible: true
       required: true
-
-#    ebs_shared_filesystem:
-#      title: Create Shared Filesystem
-#      description: Create Shared Filesystem using FSS for application binaries
-#      type: boolean
-#      default: false
-#      visible: true
 
     ebs_shared_filesystem_mount_path:
       title: Shared Filesystem path
       description: EBS Shared Filesystem path
       type: string
-      default: /u01/install/APPS/shared
+      default: /u01/install/APPS
       visible: true
 
     ebs_shared_filesystem_size_limit_in_gb:
@@ -314,15 +259,6 @@
       type: boolean
       default: false
       visible: true
-
-#    ebs_database_option:
-#      title: Create database on
-#      visible: true
-#      type: enum
-#      enum:
-#      - virtualmachine
-#      default: VM
-#      required: true
 
     db_edition:
       title: Database Edition
@@ -380,7 +316,8 @@
       title: Database Container Name
       description: The name of the CDB.
       type: string
-      pattern: "^([a-zA-Z0-9][a-zA-Z0-9_]*)?$"
+      maxlength: 8
+      pattern: "(^[a-zA-Z][a-zA-Z0-9_]{0,7})$"
       visible: ${ebs_database_required}
       default: EBSCDB
       required: true
@@ -417,8 +354,10 @@
       required: true
 
     db_admin_password:
-      description: Database Admin User Password
+      title: Database Admin User Password
+      description: "The password for the database. Password must be 9 to 30 characters and contain at least 2 uppercase, 2 lowercase, 2 special, and 2 numeric characters. The special characters must be _, #, or -. For example, XYh1z0#_d"
       type: password
+      pattern: "^(?=.*[a-z].*[a-z])(?=.*[A-Z].*[A-Z])(?=.*\\d.*\\d)(?=.*[-_#].*[-_#])[a-zA-Z0-9\\S]{9,32}$"
       required: true
       visible: ${ebs_database_required}
 
@@ -438,7 +377,8 @@
       title: Database PDB Name
       description: The name of the PDB.
       type: string
-      pattern: "^([a-zA-Z0-9][a-zA-Z0-9_]*)?$"
+      maxlength: 8
+      pattern: "(^[a-zA-Z][a-zA-Z0-9_]{0,7})$"
       visible: ${ebs_database_required}
       default: EBSDB
       required: true
@@ -473,7 +413,9 @@
     load_balancer_listen_port:
       title: Load Balancer Listen port
       description: The listener port for load balanacer
-      type: array
+      type: string
+      maxLength: 4
+      pattern: "^([0-9][0-9]{0,3})$"
       default: 80
       visible: true
       required: true
@@ -498,32 +440,24 @@
       default: "VM.Standard2.1"
 
     ssh_public_key:
-      title: Public Key for Compute and Database System(s)
-      description: Public SSH key to be included in the ~/.ssh/authorized_keys file for the default user on the instance
-      type: text
-      visible: true
+      type: oci:core:ssh:publickey
+      title: "Public Key for Compute and Database System(s)"
+      description: "Public SSH key to be included in the ~/.ssh/authorized_keys file for the opc user on the instance"
+      additionalProps:
+        allowMultiple: true
+      pattern: "((^(ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)(,((ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)*$"
       required: true
-
-    ssh_private_key:
-      title: Private Key for Compute and Database System(s)
-      description: Private SSH key required to perform EBS pre-requisites on created infrastructure.
-      type: text
       visible: true
-      required: true
 
     bastion_ssh_public_key:
-      title: SSH public key for Bastion Host
+      type: oci:core:ssh:publickey
+      title: "SSH public key for Bastion Host"
       description: The deployment creates application and database instances in private subnets. To access these instances, a bastion host is created using VMStandard2.1 shape.
-      type: text
-      visible: true
+      additionalProps:
+        allowMultiple: true
+      pattern: "((^(ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)(,((ssh-rsa AAAAB3NzaC1yc2|ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNT|ecdsa-sha2-nistp384 AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAAAIbmlzdHAzOD|ecdsa-sha2-nistp521 AAAAE2VjZHNhLXNoYTItbmlzdHA1MjEAAAAIbmlzdHA1Mj|ssh-ed25519 AAAAC3NzaC1lZDI1NTE5|ssh-dss AAAAB3NzaC1kc3)[0-9A-Za-z+\/]+[=]{0,3})( [^,]*)?)*$"
       required: true
-
-    bastion_ssh_private_key:
-      title: SSH private key for Bastion Host
-      description: The deployment creates application and database instances in private subnets. To access these instances, a bastion host is created using VMStandard2.1 shape.
-      type: text
-      visible: true
-      required: true
+      visible: false
 
     bastion_user:
       title: Bastion user
@@ -545,21 +479,15 @@
       type: string
       visible: false
 
-#    image_id:
-#      title: Image id
-#      description: OS images
-#      type: string
-#      visible: false
-
     linux_os_version:
-      title: Oracle Linux version
-      description: Operating system version for compute instances
+      title: Operation system version
+      description: Operating system (Oracle Linux) version for application instance(s).
       visible: true
       type: enum
       enum:
       - "6.10"
-      - "7.7"
-      default: "7.7"
+      - "7.8"
+      default: "7.8"
       required: true
 
     database_autobackup_enabled:
@@ -578,9 +506,13 @@
       type: map
       visible: false
 
+    freeform_tags:
+      type: string
+      visible: true
+
   outputs:
     BastionPublicIPs:
-      title: Bastion Public IP
+      title: Bastion Host Details
       type: string
 
     ApplicationPrivateIPs:
@@ -588,7 +520,15 @@
       type: string
 
     FSSDetails:
-      title: FSS Details
+      title: Shared Filesystem(FSS) Details
       type: string
-  
+
+    DatabaseSystemConnectionString:
+      title: Database Connection String
+      type: string
+
+    LoadBalancerIP:
+      title: Load Balancer Details
+      type: string
+
   primaryOutputButton: ${BastionPublicIPs}

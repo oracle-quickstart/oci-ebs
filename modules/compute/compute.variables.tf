@@ -2,7 +2,6 @@
 
 The Universal Permissive License (UPL), Version 1.0*/
 
-
 variable "compartment_ocid" {
   description = "Compartment name"
 }
@@ -45,18 +44,18 @@ variable "compute_subnet" {
 
 variable "availability_domain" {
   description = "Availability Domainr"
-  type        = "list"
+  type        = list(string)
 }
 
 variable "fault_domain" {
   description = "Fault Domain"
-  type        = "list"
+  type        = list(string)
 }
-
+/*
 variable "AD" {
   description = "Availability Domain number"
-  type        = "list"
-}
+  type        = list(string)
+}*/
 
 variable "bastion_public_ip" {
   description = "Public IP of bastion instance"
@@ -74,7 +73,8 @@ variable "fss_subnet" {
   description = "FSS subnet"
 }
 
-variable "fss_limit_size_in_gb" {}
+variable "fss_limit_size_in_gb" {
+}
 
 variable "timeout" {
   description = "Timeout setting for resource creation "
@@ -102,9 +102,22 @@ variable "app_bv_mount_path" {
 }
 
 variable "timezone" {
-    description = "Set timezone for compute instance"
+  description = "Set timezone for compute instance"
 }
 
 variable "bastion_user" {
   description = "Login user for bastion host"
 }
+
+variable "tmpdir" {
+  description = "Temporary Directory"
+  default     = "/tmp"
+}
+
+variable "freeform_tags" {
+  type = map(any)
+  default = {
+    environment = "dev"
+  }
+}
+

@@ -2,61 +2,80 @@
 
 The Universal Permissive License (UPL), Version 1.0*/
 
-
 locals {
-  ebsfss_private_ips = "${flatten(concat(data.oci_core_private_ips.ip_mount_target.*.private_ips))}"
+  ebsfss_private_ips = flatten(
+    concat(data.oci_core_private_ips.ip_mount_target.*.private_ips),
+  )
 }
 
 locals {
   ebsfss_exports = [
-    "${oci_file_storage_export.fss_exp.*.path}",
+    oci_file_storage_export.fss_exp.*.path,
   ]
-  ebsfss_fstabs = "${formatlist("%s:%s", data.template_file.ebsfss_ips.*.rendered, oci_file_storage_export.fss_exp.*.path)}"
+  ebsfss_fstabs = formatlist(
+    "%s:%s",
+    data.template_file.ebsfss_ips.*.rendered,
+    oci_file_storage_export.fss_exp.*.path,
+  )
 }
 
- 
 # Get private IP of File Storage Service
 data "oci_core_private_ips" "ip_mount_target" {
-  count               = "${length(var.availability_domain)}"
-  subnet_id           = "${element(oci_file_storage_mount_target.fss_mt.*.subnet_id, count.index)}"
+  count = length(var.availability_domain)
+  subnet_id = element(
+    oci_file_storage_mount_target.fss_mt.*.subnet_id,
+    count.index,
+  )
 
   filter {
-    name    = "id"
-    values  = ["${element(flatten(oci_file_storage_mount_target.fss_mt.*.private_ip_ids), count.index)}"]
+    name = "id"
+    # TF-UPGRADE-TODO: In Terraform v0.10 and earlier, it was sometimes necessary to
+    # force an interpolation expression to be interpreted as a list by wrapping it
+    # in an extra set of list brackets. That form was supported for compatibility in
+    # v0.11, but is no longer supported in Terraform v0.12.
+    #
+    # If the expression in the following list itself returns a list, remove the
+    # brackets to avoid interpretation as a list of lists. If the expression
+    # returns a single list item then leave it as-is and remove this TODO comment.
+    values = [element(
+      flatten(oci_file_storage_mount_target.fss_mt.*.private_ip_ids),
+      count.index,
+    )]
   }
 }
 
 data "template_file" "ebsfss_ips" {
   template = "$${ip_address}"
-  count    = "${length(var.availability_domain)}"
+  count    = length(var.availability_domain)
 
   vars = {
-    ip_address = "${lookup(local.ebsfss_private_ips[count.index], "ip_address")}"
+    ip_address = local.ebsfss_private_ips[count.index]["ip_address"]
   }
 }
 
 # Get Filesystem details
 data "template_file" "bootstrap" {
-  template = "${file("${path.module}/userdata/bootstrap.tpl")}"
-  
-  vars {
-    src_mount_path                = "${var.fss_primary_mount_path}/"
-    src_mount_target_private_ip   = "${element(data.template_file.ebsfss_ips.*.rendered, 0)}"
-    src_export_path               = "${element(oci_file_storage_export.fss_exp.*.path,0)}"
-    app_instance_listen_port      = "${var.compute_instance_listen_port}"
-    timezone                      = "${var.timezone}"
+  template = file("${path.module}/userdata/bootstrap.tpl")
+
+  vars = {
+    src_mount_path              = "${var.fss_primary_mount_path}/"
+    src_mount_target_private_ip = element(data.template_file.ebsfss_ips.*.rendered, 0)
+    src_export_path             = element(oci_file_storage_export.fss_exp.*.path, 0)
+    app_instance_listen_port    = var.compute_instance_listen_port
+    timezone                    = var.timezone
   }
 }
 
 # Get rsync inputs
 data "template_file" "rsync" {
-  count     = "${local.enable_rsync ? 1 : 0}"
-  template  = "${file("${path.module}/userdata/rsync.sh")}"
-  vars {
-    src_mount_path                = "${var.fss_primary_mount_path}/"
-    dst_export_path               = "${element(oci_file_storage_export.fss_exp.*.path,1)}"
-    dst_mount_target_private_ip   = "${element(data.template_file.ebsfss_ips.*.rendered, 1)}"
-    dst_mount_path                = "${var.fss_primary_mount_path}DR/"
-    fss_sync_frequency            = "*/30 * * * *"
+  count    = local.enable_rsync ? 1 : 0
+  template = file("${path.module}/userdata/rsync.sh")
+  vars = {
+    src_mount_path              = "${var.fss_primary_mount_path}/"
+    dst_export_path             = element(oci_file_storage_export.fss_exp.*.path, 1)
+    dst_mount_target_private_ip = element(data.template_file.ebsfss_ips.*.rendered, 1)
+    dst_mount_path              = "${var.fss_primary_mount_path}DR/"
+    fss_sync_frequency          = "*/30 * * * *"
   }
 }
+

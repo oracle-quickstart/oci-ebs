@@ -15,47 +15,55 @@ For more information on Oracle E-Business Suite deployment architecture on Oracl
 ## **Prerequisites**
 
 First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/oracle-quickstart/oci-prerequisites).
-A terraform version of 0.11.x is required.
+A terraform version of 0.13.x is required.
 
 ## **How to use this module**
 
 ### **Using OCI Resource Manager**
 
-Follow Resource Manager steps [here](https://github.com/oracle-quickstart/oci-ebs/tree/master/orm) 
-
-### **Using Terraform**
-
-1) Clone the repo
+1.Clone and package the repo. This can be done on a local system or using Cloud Shell.
 
   ```
   $ git clone https://github.com/oracle-quickstart/oci-ebs.git
   $ cd oci-ebs
+  $ sh pack.sh
   ```
+   You should now see a zip file (ebusinesssuite.zip) in current folder. 
+   
+2.Create a Resource Manager Stack via Cloud Shell/Console/CLI using steps documented [here](https://docs.cloud.oracle.com/en-us/iaas/Content/ResourceManager/Concepts/samplecomputeinstance.htm#build). 
+  
+  ```
+  cloudshell:oci-ebs (us-phoenix-1)$ oci resource-manager stack create --compartment-id <compartment_id> --display-name ebusinesssuite-orm-tf-0.12 --description "E Business Suite Infrastructure Provisioning" --config-source ./ebusinesssuite.zip  
+  ```
+### **Using Terraform**
 
-2) Update **env-vars** with the required information. The file contains definitions of environment variables for your Oracle Cloud Infrastructure tenancy.
+1.Clone the repo
+  ```
+  $ git clone https://github.com/oracle-quickstart/oci-ebs.git
+  $ cd oci-ebs
+  ```
+2.Update **env-vars** with the required information. The file contains definitions of environment variables for your Oracle Cloud Infrastructure tenancy.
 
-3) Update **terraform.tfvars** with the inputs for the architecture that you want to build. A running sample terraform.tfvars file for multiple availability domain architecture is available below. The contents of sample file can be copied to create a running terraform.tfvars input file. Update db_admin_password with actual password in terraform.tfvars file.
+3.Rename **terraform.tfvars.template** to **terraform.tfvars**.Update **terraform.tfvars** with the inputs for the architecture that you want to build. A running sample terraform.tfvars file for multiple availability domain architecture is available below. The contents of sample file can be copied to create a running terraform.tfvars input file. Update db_admin_password with actual password in terraform.tfvars file.
 
-4) Initialize Terraform. This will also download the latest terraform oci provider.
-
+4.Initialize Terraform. This will also download the latest terraform oci provider.
 
   ```
   $ terraform init
   ```
-
-5) Set environment variables by running source **env-vars**.
+5.Set environment variables by running source **env-vars**.
 
   ```
   $ source env-vars
   ```
 
-6) Run terraform plan.
+6.Run terraform plan.
 
   ```
   $ terraform plan
   ```
 
-7) Run terraform apply to create the infrastructure.
+7.Run terraform apply to create the infrastructure.
 
   ```
   $ terraform apply
@@ -66,7 +74,7 @@ Follow Resource Manager steps [here](https://github.com/oracle-quickstart/oci-eb
   When all components have been created, Terraform displays a completion message. For example: Apply complete! Resources: 47 added, 0 changed, 0 destroyed.
 
 
-8) If you want to delete the infrastructure, run:
+8.f you want to delete the infrastructure, run:
 
   ```
   $ terraform destroy
@@ -120,20 +128,15 @@ Terraform modules for Oracle E-Business Suite has the following structure:
 │           ├── vcn.outputs.tf
 │           ├── vcn.tf
 │           └── vcn.vars.tf
-├── orm
-│   ├── dist
-│   ├── orm_generate_zip.tf
-│   └── README.md
 ├── outputs.tf
+├── pack.sh
 ├── provider.tf
 ├── README.md
-├── routetables.tf
 ├── schema.yaml
-├── seclists.tf
-├── terraform.tfvars
+├── terraform.tfvars.template
 └── variables.tf
 
-12 directories, 40 files
+10 directories, 37 files
 
 ```
 
@@ -144,9 +147,7 @@ Terraform modules for Oracle E-Business Suite has the following structure:
   - [outputs.tf]: This is the terraform outputs file.
   - [provider.tf]: This is the terraform provider file that defines the provider (Oracle Cloud Infrastructure) and authentication information.
   - [variables.tf]: This is the terraform variables file to declare variables.
-  - [routetables.tf]: This file creates route tables.
-  - [seclists.tf]: This file creates security lists.
-  - [terraform.tfvars]: This is an input file to pass values to declared variables.
+  - [terraform.tfvars.template]: This is a sample input file to pass values to declared variables.
 
 - [**modules**]: The modules directory contain all the modules required for creating Oracle Cloud Infrastructure resources.
   - [bastion]: This module is used to create bastion hosts.
@@ -157,8 +158,7 @@ Terraform modules for Oracle E-Business Suite has the following structure:
     - [vcn]: This sub module creates the VCN, internet gateway, service gateway, dynamic routing gateway and NAT gateway.
     - [subnets]: This sub module creates the subnets within a VCN.
 
-- [**orm**]: For OCI Resource Manager
-  - [orm_generate_zip.tf]: This is used to create a zip file for OCI Resource Manager Stack.
+- [**pack.sh**]: Create zip package for Resource Manager Stack.
 
 ## **Inputs required in the terraform.tfvars file**
 
@@ -171,6 +171,7 @@ The following inputs are required for terraform modules:
 | vcn_dns_label              | DNS Label of the VCN (Virtual Cloud Network) to be created.                                                                                                                                                                                                                                                                                                                               |
 | linux_os_version           | Operating system version of Oracle Linux for compute instances. The terraform module for compute instances always pick up the latest image available for the chosen Oracle Linux version in the region.                                                                            |
 | timezone                   | Timezone of compute instances and database systems.                     |                                                                                     
+| freeform_tags                 | Freeform tag for resource. |                                                                                                                                                                                                                                                             
 | ebs_env_prefix                 | Environment prefix to define names of Oracle Cloud infrastructure resources. |                                                                                                                                                                                                                                                             
 ebs_app_instance_count     | Number of Oracle E-Business suite application instances to be created. For single availability domain architecture, the application instances will be provisioned in round robin fashion across multiple fault domains. For multiple availability domain architecture, application instances will be provisioned in round robin fashion across fault domains and availability domains|                                                                   
 | ebs_app_instance_shape         | Shape of application instance. For more information on available shapes, see [VM Shapes](https://docs.cloud.oracle.com/iaas/Content/Compute/References/computeshapes.htm?TocPath=Services#vmshapes)  |                                                                                                                                                                                                                 
@@ -203,7 +204,7 @@ ebs_app_instance_count     | Number of Oracle E-Business suite application insta
 ```hcl
 # AD (Availability Domain to use for creating EBS infrastructure) 
 # For single AD regions (ap-seoul-1, ap-tokyo-1, ca-toronto-1), use AD = ["1"] 
-AD = ["1"]
+AD = ["1","2"]
 
 # CIDR block of VCN to be created
 vcn_cidr = "172.16.0.0/16"
@@ -212,19 +213,22 @@ vcn_cidr = "172.16.0.0/16"
 vcn_dns_label = "ebsvcn"
 
 # Operating system version to be used for application instances. e.g  6.10 or 7.6
-linux_os_version = "7.7"
+linux_os_version = "7.8"
 
 # Timezone of compute instance
 timezone = "America/New_York"
 
-#Environment prefix to define name of resources
-ebs_env_prefix = "dev"
+# Environment prefix to define name of resources
+ebs_env_prefix = "prd"
+
+# Freeform tags
+freeform_tags = { environment = "prod", costcenter = "10240" }
 
 # Number of application instances to be created
-ebs_app_instance_count = "1"
+ebs_app_instance_count = "2"
 
 # Shape of app instance
-ebs_app_instance_shape = "VM.Standard2.2"
+ebs_app_instance_shape = "VM.Standard2.1"
 
 # Boot volume size 
 ebs_app_boot_volume_size_in_gb = "100"
@@ -248,7 +252,7 @@ ebs_shared_filesystem_mount_path = "/u01/install/APPS"
 ebs_shared_filesystem_size_limit_in_gb = "500"
 
 # Whether database is required to be created
-ebs_database_required = "true"
+ebs_database_required = true
 
 # Datbase Edition
 db_edition = "ENTERPRISE_EDITION_EXTREME_PERFORMANCE"
@@ -260,10 +264,10 @@ db_license_model = "LICENSE_INCLUDED"
 db_version = "12.1.0.2"
 
 # Number of database nodes
-db_node_count = "1"
+db_node_count = "2"
 
 # Shape of Database nodes
-db_instance_shape = "VM.Standard2.1"
+db_instance_shape = "VM.Standard2.2"
 
 # Database name
 db_name = "EBSCDB"
@@ -284,7 +288,7 @@ db_nls_characterset = "AL16UTF16"
 db_pdb_name = "DUMMYPDB"
 
 # Whether private Load Balancer
-load_balancer_private = "True"
+load_balancer_private = true
 
 # Hostname of Load Balancer
 load_balancer_hostname = "ebs.example.com"
@@ -325,14 +329,11 @@ AD = ["1"]
 
   For example,
   ```
-  ### Public/private keys used on the instance
+  ### Public key used on the instance
   export TF_VAR_ssh_public_key=/home/oracle/tf/<mykey.pub>
-  export TF_VAR_ssh_private_key=/home/oracle/tf/<mykey.pem>
 
-  ### Public/private keys used on the bastion instance
+  ### Public key used on the bastion instance
   export TF_VAR_bastion_ssh_public_key=/home/oracle/tf/<mykey.pub>
-  export TF_VAR_bastion_ssh_private_key=/home/oracle/tf/<mykey.pem>
-
   ```
   For terraform installations on Unix systems, the private half of SSH key pairs should be in OpenSSH format. The instances in private subnet can be reached via SSH on port 22 by allowing agent forwarding in Putty and using Putty authentication tool like Pageant. Note that this does not require copying private SSH key for instances to bastion host.
 
@@ -342,9 +343,9 @@ AD = ["1"]
 
 * The Terraform modules always use latest Oracle Linux image for the chosen operating system for provisioning compute instances. There are chances that minor version of operating system gets upgraded and a new image gets published in Oracle Cloud Infrastructure console. In that case, always check the available version of image from oracle Cloud Infrastructure compute console to input this value. For example, if Oracle Linux version is changed from version 7.5 to 7.6, change the value of input variable "linux_os_version" from 7.5 to 7.6.  
 
-* For multi availability domain architcture, the standby database is built using OCI native dataguard association. The standby database is built in second availability configured in input parameter "AD"
+* For multi availability domain architecture, the standby database is built using OCI native dataguard association. The standby database is built in second availability configured in input parameter "AD"
 
-* The terraform version has been locked to <0.12.0 and Oracle Cloud Infrastructure provider version has been locked to 3.70.0 in provider.tf file. To use a version higher than these versions, change the values in the provider.tf file. The terraform modules may require changes for a successful run with a new terraform and Oracle Cloud Infrastructure provider version. 
+* The terraform version has been locked to >=0.12 and Oracle Cloud Infrastructure provider version has been locked to 3.93.0 in provider.tf file. To use a version higher than these versions, change the values in the provider.tf file. The terraform modules may require changes for a successful run with a new terraform and Oracle Cloud Infrastructure provider version. 
 
 
 ## **Cloud-init template for application servers**
