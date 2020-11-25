@@ -5,7 +5,7 @@ The Universal Permissive License (UPL), Version 1.0*/
 # Terraform version
 
 terraform {
-  required_version = ">=0.12"
+  required_version = ">=0.13"
   required_providers {
     oci = {
       source  = "hashicorp/oci"

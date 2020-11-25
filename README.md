@@ -1,41 +1,41 @@
 # **Terraform modules for Oracle E-Business Suite on Oracle Cloud Infrastructure**
+[![Deploy to Oracle Cloud][magic_button]][magic_ebs_stack]
 
-The Terraform modules for Oracle E-Business Suite allow you to provision infrastructure for Oracle E-Business Suite on Oracle Cloud Infrastructure using Terraform. Oracle E-Business suite can be deployed on Oracle Cloud Infrastructure in single availability domain or multi availability domain architecture.The modules can be used to create infrastructure for Oracle E-Business Suite in single Availability Domain as well as multiple Availability Domains.
+The Terraform modules for Oracle E-Business Suite allow you to provision infrastructure for Oracle E-Business Suite on Oracle Cloud Infrastructure using OCI Resource Manager and Terraform. Oracle E-Business suite can be deployed on Oracle Cloud Infrastructure in single availability domain or multi availability domain architecture.The modules can be used to create infrastructure for Oracle E-Business Suite in single Availability Domain as well as multiple Availability Domains.
 
 ### **Architecture for Deploying Oracle E-Business Suite in a Single Availability domain**
 ![Architecture for Deploying Oracle E-Business Suite in a Single Availability domain](./_docs/single_availability_domain_ha_topology.png)
 
-### **Architecture for Deploying Oracle E-Business Suite in a multiple Availability domains**
+### **Architecture for Deploying Oracle E-Business Suite in multiple Availability domains**
 ![Architecture for Deploying Oracle E-Business Suite in Multiple Availability domains](./_docs/multiple_availability_domain_ha_topology.png)
 
 For more information on Oracle E-Business Suite deployment architecture on Oracle Cloud Infrastructure, see
 - [Architecture for Deploying Oracle E-Business Suite in a Single Availability domain](https://docs.oracle.com/en/solutions/deploy-ebusiness-suite-oci/index.html#GUID-1F8ACA7B-C147-446F-A4A4-AD70E4ECCA66)
 - [Architecture for Deploying Oracle E-Business Suite in Multiple Availability domains](https://docs.oracle.com/en/solutions/deploy-ebusiness-suite-oci/index.html#GUID-43B8797E-A2BD-4CA2-A4A9-0E19DB15DA3B)
-
-## **Prerequisites**
-
-First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/oracle-quickstart/oci-prerequisites).
-A terraform version of 0.13.x is required.
-
 ## **How to use this module**
 
 ### **Using OCI Resource Manager**
+1. Click [![Deploy to Oracle Cloud][magic_button]][magic_ebs_stack]
 
-1.Clone and package the repo. This can be done on a local system or using Cloud Shell.
+   If you aren't already signed in, when prompted, enter the tenancy and user credentials.
 
-  ```
-  $ git clone https://github.com/oracle-quickstart/oci-ebs.git
-  $ cd oci-ebs
-  $ sh pack.sh
-  ```
-   You should now see a zip file (ebusinesssuite.zip) in current folder. 
+2. Review and accept the terms and conditions.
+
+3. Select the region where you want to deploy the stack.
+
+4. Follow the on-screen prompts and instructions to create the stack.
+
+5. After creating the stack, click Terraform Actions, and select Plan.
+
+6. Wait for the job to be completed, and review the plan.
    
-2.Create a Resource Manager Stack via Cloud Shell/Console/CLI using steps documented [here](https://docs.cloud.oracle.com/en-us/iaas/Content/ResourceManager/Concepts/samplecomputeinstance.htm#build). 
-  
-  ```
-  cloudshell:oci-ebs (us-phoenix-1)$ oci resource-manager stack create --compartment-id <compartment_id> --display-name ebusinesssuite-orm-tf-0.12 --description "E Business Suite Infrastructure Provisioning" --config-source ./ebusinesssuite.zip  
-  ```
-### **Using Terraform**
+   To make any changes, return to the Stack Details page, click Edit Stack, and make the required changes. Then, run the Plan action again.
+
+7. If no further changes are necessary, return to the Stack Details page, click Terraform Actions, and select Apply. 
+
+### **Using Terraform CLI**
+First off you'll need to do some pre deploy setup.  That's all detailed [here](https://github.com/oracle-quickstart/oci-prerequisites).
+A terraform version of 0.13.x is required.
 
 1.Clone the repo
   ```
@@ -400,3 +400,5 @@ echo '${dst_mount_target_private_ip}:${dst_export_path} ${dst_mount_path} nfs tc
 echo '#${fss_sync_frequency} /usr/bin/flock -n /var/run/fss-sync-up-file-system.lck rsync -aHAXxv --numeric-ids --delete ${src_mount_path} ${dst_mount_path}' | sudo tee -a /etc/cron.d/fss-sync-up-file-system
 touch /tmp/rsync.done
 ```
+[magic_button]: https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg
+[magic_ebs_stack]: https://console.us-ashburn-1.oraclecloud.com/resourcemanager/stacks/create?region=home&zipUrl=https://github.com/oracle-quickstart/oci-ebs/archive/master.zip

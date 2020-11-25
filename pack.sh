@@ -10,4 +10,4 @@ zipfile="ebusinesssuite.zip"
 if [ -f $zipfile ]; then
     rm -f $zipfile
 fi
-zip -r  ebusinessuite.zip . -x  pack.sh .gitignore  terraform*  .terraform\*  _docs\*  orm\*  .git\* .idea\* env-vars ebusinesssuite.zip *.zip
+zip -r  ebusinessuite.zip . -x  pack.sh .gitignore  terraform*  .terraform\* _docs\* orm\* .git\* .idea\* env-vars ebusinesssuite.zip *.zip README.md
