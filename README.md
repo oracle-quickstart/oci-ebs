@@ -386,7 +386,7 @@ runcmd:
 These are the unix commands run to enable rsync across Oracle E-Business Suite application servers.
 
 ```
-#Copyright © 2020, Oracle and/or its affiliates. All rights reserved.
+#Copyright © 2020, Oracle and/or its affiliates.
 
 #The Universal Permissive License (UPL), Version 1.0
 
